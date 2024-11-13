@@ -29,22 +29,22 @@ client.once('ready', async () => {
     console.log(`LOGGED IN AS ${client.user.tag}!`);
     await registerCommands();
 });
-
 client.on('interactionCreate', async interaction => {
-    try {
-        if (interaction.isCommand()) {
-            const command = commands[interaction.commandName];
-            if (command?.interaction) { await command.interaction(interaction); }
-        } else if (interaction.isButton()) {
-            const command = commands[interaction.customId.split('-')[0]];
-            if (command?.button) {      await command.button(interaction);      }
+    if (interaction.isCommand()) {
+        console.log('Received command:', interaction.commandName);
+        
+        try {
+            await interaction.deferReply();
+            console.log('Deferred reply');
+            const result = await processCommand(interaction);
+            console.log('Processed result:', result);
+            await interaction.editReply(result);
+            console.log('Replied with result');
+        } catch (err) {
+            console.error("Error processing command:", err);
+            await interaction.editReply("There was an error processing your request.");
         }
-    } catch (err) {
-        const errPayload = { content: `ERROR: COULDN\'T EXECUTE COMMAND: ${err}`, ephemeral: true };
-        console.log(err);
-        if (interaction.replied || interaction.deferred) await interaction.followUp(errPayload);
-        else await interaction.reply(errPayload);
-        throw err;
     }
 });
+
 client.login(settings.token);
