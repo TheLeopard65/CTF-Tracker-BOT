@@ -11,12 +11,12 @@ module.exports.interaction = async interaction => {
 
     const events = upcoming_events
         .sort((a, b) => {
-            if (sort === 'weight') {			return b.weight - a.weight;	}
-            else if (sort === 'end') {			return new Date(a.finish) - new Date(b.finish);	}
-            else if (sort === 'start') {		return new Date(a.start) - new Date(b.start);	}
-            else if (sort === 'participants') {	return b.participants - a.participants;	}
-            else if (sort === 'duration') {		return (new Date(a.finish) - new Date(a.start)) - (new Date(b.finish) - new Date(b.start));	}
-            else {	return b.weight - a.weight;	}
+            if (sort === 'weight') { return b.weight - a.weight; }
+            else if (sort === 'end') { return new Date(a.finish) - new Date(b.finish); }
+            else if (sort === 'start') { return new Date(a.start) - new Date(b.start); }
+            else if (sort === 'participants') { return b.participants - a.participants; }
+            else if (sort === 'duration') { return (new Date(a.finish) - new Date(a.start)) - (new Date(b.finish) - new Date(b.start)); }
+            else { return b.weight - a.weight; }
         })
         .slice(0, limit);
 
@@ -42,8 +42,7 @@ module.exports.interaction = async interaction => {
         const numTeams = event.participants;
         const prizes = event.prizes.length ? event.prizes : 'No prizes listed';
 
-        let value = `
-        **${i + 1}. [${eventName}](${eventUrl})**
+        let value = `**${i + 1}. [${eventName}](${eventUrl})**
         - **START TIME**: <t:${Math.floor(startTime.getTime() / 1000)}:f>
         - **END TIME**: <t:${Math.floor(endTime.getTime() / 1000)}:f>
         - **ORGANIZORS**: ${organizers}
@@ -51,13 +50,16 @@ module.exports.interaction = async interaction => {
         - **LOCATION**: ${location}
         - **CTF WEIGHT**: ${weight}
         - **TEAMS**: ${numTeams}
-        - **PRIZES**: ${prizes}
-        `;
+        - **PRIZES**: ${prizes}`;
 
-        if (show_description && event.description) {	value += `\n\n**DESCRIPTION**:\n${event.description.length > 950 ? event.description.slice(0, 950) + '...' : event.description}`;	}
-        embed.addFields({	name: '──────────★──────────', value: value,	});
+        if (show_description && event.description) {
+            value += `\n\n**DESCRIPTION**:\n${event.description.length > 950 ? event.description.slice(0, 950) + '...' : event.description}`;
+        }
+
+        embed.addFields({ name: '──────────★──────────', value: value });
         characters += value.length + 21;
     }
+
     await interaction.editReply({ embeds: [embed], files: [{ attachment: '../flag.png', name: 'flag.png' }] });
 };
 
@@ -76,17 +78,20 @@ module.exports.application_command = () => {
         .addStringOption(option =>
             option
                 .setName('sort')
-                .setDescription('Sort the events by a specific field.')
+                .setDescription('Sort the results.')
                 .setRequired(false)
                 .addChoices(
                     { name: 'Weight', value: 'weight' },
-                    { name: 'End Time', value: 'end' },
                     { name: 'Start Time', value: 'start' },
+                    { name: 'End Time', value: 'end' },
                     { name: 'Participants', value: 'participants' },
                     { name: 'Duration', value: 'duration' }
                 )
         )
         .addBooleanOption(option =>
-            option.setName('show_description').setDescription('Show event description. Default: true').setRequired(false)
+            option
+                .setName('show_description')
+                .setDescription('Show event descriptions in the result.')
+                .setRequired(false)
         );
 };
