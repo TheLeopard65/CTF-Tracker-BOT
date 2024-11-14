@@ -18,16 +18,21 @@ const fetchAndCache = async (key, url, retries = 3) => {
     const cachedData = cache.get(key);
     if (cachedData) { return cachedData; }
     try {
-        const response = await fetch(url);
+        console.log(`Fetching data from ${url}, retries left: ${retries}`);
+        const response = await fetch(url, { timeout: 15000 });
         if (response.status !== 200) return null;
         const data = await response.json();
         cache.set(key, data);
         return data;
     } catch (error) {
-        if (retries > 0 && error.code === 'ECONNRESET') {	return fetchAndCache(key, url, retries - 1);	}
+        if (retries > 0 && error.code === 'ECONNRESET') { 
+            return fetchAndCache(key, url, retries - 1); 
+        }
+        console.error(`Error fetching data from ${url}:`, error.message);
         return null;
     }
 };
+
 
 const getTeam = async query => {
     if (query.match(/^[0-9]+$/)) {
@@ -109,7 +114,7 @@ const registerCommands = async () => {
                     .setDescription('Limits number of upcoming events to display.')
                     .setRequired(false)
                     .setMinValue(1)
-                    .setMaxValue(10)
+                    .setMaxValue(25)
             )
             .addStringOption(option =>
                 option.setName('sort')
@@ -133,7 +138,7 @@ const registerCommands = async () => {
         new djs.SlashCommandBuilder()
             .setName('teaminfo')
             .setDescription("Views a team's information by name or ID.")
-            .addStringOption(option => option.setName('query').setDescription('The team name or ID to search for.').setRequired(true))
+            .addStringOption(option => option.setName('teamid').setDescription('The team name or ID to search for.').setRequired(true))
             .toJSON(),
 
         new djs.SlashCommandBuilder()
@@ -192,9 +197,9 @@ const newctfsCommand = async interaction => {
 
         const embed = new djs.EmbedBuilder()
             .setColor(global.config.color)
-            .setTitle(' ~~~# TOP UPCOMING CTF EVENTS ON CTFTIME #~~~ ')
+            .setTitle(' ##### TOP UPCOMING CTF EVENTS ON CTFTIME ##### ')
             .setURL('https://ctftime.org/event/list/upcoming')
-            .setDescription('Here are the top 10 online upcoming CTFs on CTFTime.');
+            .setDescription('Here are the Top Upcoming Online CTFs on CTFTime for you to play:');
 
         let characters = 0;
         for (let i = 0; i < events.length && characters + 1000 < 5500; i++) {
@@ -216,30 +221,46 @@ const newctfsCommand = async interaction => {
 };
 
 const teaminfoCommand = async interaction => {
-    const query = interaction.options.getString('query');
+    await interaction.deferReply();
+    const query = interaction.options.getString('teamid');
+    if (!query) {	return await interaction.editReply({ content: 'SYNTAX: Provide a team name or ID to search for.', ephemeral: true });	}
     try {
-        if (!query) {   return interaction.reply({ content: 'SYNTAX: Provide a team name or ID to search for.', ephemeral: true });	}
         const team = await getTeam(query);
-        if (!team) {	return interaction.reply({ content: `ISSUE: TEAM "${query}" NOT FOUND. (PLEASE CHECK YOUR INPUT)`, ephemeral: true });	}
+        if (!team || !team.id) {	return await interaction.editReply({ content: `ISSUE: TEAM "${query}" NOT FOUND. (PLEASE CHECK YOUR INPUT)`, ephemeral: true });	}
+        const members = team.aliases && team.aliases.length > 0 ? team.aliases.join(', ') : 'N/A';
         const events = await getEventsByTeam(team.id);
-        if (!events || events.length === 0) {	return interaction.reply({ content: `ISSUE: NO CTF EVENTS FOUND FOR TEAM "${team.name}".`, ephemeral: true });	}
+        if (!events || events.length === 0) {	return await interaction.editReply({ content: `ISSUE: NO CTF EVENTS FOUND FOR TEAM "${team.name}".`, ephemeral: true });	}
+
         const embed = new djs.EmbedBuilder()
             .setColor(global.config.color)
-            .setTitle(`${team.name}`)
+            .setTitle(`#####@ - ${team.name} TEAM INFORMATION - @#####`)
             .setURL(`https://ctftime.org/team/${team.id}/`)
             .addFields(
-                { name: 'Team Name:', value: team.name, inline: true },
-                { name: 'Team ID:', value: team.id, inline: true },
-                { name: 'Members:', value: team.members.length ? team.members.join(', ') : '(NO MEMEBERS FOUND)', inline: true }
-            );
+                { name: 'NAME:', value: `${team.name}`, inline: true },
+                { name: 'Country:', value: `${team.country || 'N/A'}`, inline: true },
+                { name: 'TEAM-ID:', value: `${team.id}`, inline: true },
+                { name: 'NATIONAL-RANK:', value: `${team.rating && team.rating['2024'] ? team.rating['2024'].country_place.toString() : 'N/A'}`, inline: true },
+                { name: 'TEAM MEMBERS:', value: `${members}`, inline: true }
+            )
+            .setFooter({ text: 'NOTE: DATA PROVIDED BY CTFTIME.ORG' })
+            .setTimestamp();
+
+		const eventFields = events.slice(0, 5).map((event, index) => {
+            const eventTitle = event.title || 'No Title';
+            const eventPoints = event.points || 'No Points';
+            const eventRank = event.place || 'N/A';
+            return `${index + 1}. **${eventTitle}** (_Rank: ${eventRank} & Points: ${eventPoints}_)`;
+        }).join('\n');
+
         embed.addFields({
-            name: 'Recent Events:',
-            value: events.slice(0, 3).map(event => `${event.title}: ${event.points} points, placed ${event.place}`).join('\n') || 'No events to display',
+            name: `\n#####@ - ${team.name} RECENT EVENTS - @#####`,
+            value: eventFields || '! No events to display !',
+            inline: false
         });
-        embed.setFooter({ text: 'Need help? Visit our [GitHub](https://github.com/MitruStefan/ctf-sentinel)' });
-        await interaction.reply({ embeds: [embed] });
+
+        return await interaction.editReply({ embeds: [embed] });
     } catch (error) {
-        await interaction.reply({ content: 'ERROR: COULDN\'T FETCH TEAM INFO TEAM-INFO. (PLEASE TRY AGAIN LATER)', ephemeral: true });
+        return await interaction.editReply({ content: 'ERROR: Could not fetch Team Information. (PLEASE TRY AGAIN LATER)', ephemeral: true });
     }
 };
 
