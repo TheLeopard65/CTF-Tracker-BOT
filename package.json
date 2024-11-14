@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MitruStefan/ctf-sentinel.git"
+    "url": "git+https://github.com/TheLeopard65/CTF-Tracker-BOT/"
   },
   "keywords": [
     "discord",
@@ -20,9 +20,9 @@
   "author": "Leopard (@theleopard65)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MitruStefan/ctf-sentinel/issues"
+    "url": "https://github.com/TheLeopard65/CTF-Tracker-BOT/issues"
   },
-  "homepage": "https://github.com/MitruStefan/ctf-sentinel#readme",
+  "homepage": "https://github.com/TheLeopard65/CTF-Tracker-BOT/readme",
   "dependencies": {
     "discord": "^0.8.2",
     "discord.js": "^14.16.3",
