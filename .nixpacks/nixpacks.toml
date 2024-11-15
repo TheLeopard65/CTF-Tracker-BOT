@@ -1,0 +1,6 @@
+[build]
+  package_manager = "npm"
+  node_version = "18"
+  install = "npm ci"
+  start = "npm run start"
+  workdir = "/app"
