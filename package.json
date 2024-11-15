@@ -2,9 +2,9 @@
   "name": "CTF-TRACKER",
   "version": "1.0.0",
   "description": "A Discord Bot for real-time CTF updates and insights powered by CTFtime. It also manages multiple teams for fostering competitions between them",
-  "main": "CTF-Tracker.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node CTF-Tracker.js", 
+    "start": "node CTF-Tracker.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,6 +27,7 @@
   "dependencies": {
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
-    "node-cache": "^5.1.2"
+    "node-cache": "^5.1.2",
+    "node-fetch": "^2.6.7"
   }
 }
