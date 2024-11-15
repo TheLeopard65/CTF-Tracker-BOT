@@ -1,6 +1,7 @@
 {
   "name": "CTF-TRACKER",
   "version": "1.0.0",
+  "type": "module",
   "description": "A Discord Bot for real-time CTF updates and insights powered by CTFtime. It also manages multiple teams for fostering competitions between them",
   "main": "CTF-Tracker.js",
   "scripts": {
