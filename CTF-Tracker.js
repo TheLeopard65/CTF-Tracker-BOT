@@ -1,10 +1,10 @@
-const djs = require('discord.js');
-const fs = require('fs');
-require('dotenv').config();
-const fetch = require('node-fetch');
-const NodeCache = require('node-cache');
-const cache = new NodeCache({ stdTTL: 60 * 60 * 24 });
+import djs from 'discord.js';
+import fs from 'fs';
+import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+import NodeCache from 'node-cache';
 
+const cache = new NodeCache({ stdTTL: 60 * 60 * 24 });
 const settings = { token: process.env.TOKEN, color: '#0276C9', timezone: 'Asia/Karachi' };
 global.config = settings;
 
