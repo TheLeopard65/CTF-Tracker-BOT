@@ -1,4 +1,4 @@
-name: Deploy Discord Bot
+name: Deploy CTF-Tracker
 
 on:
   push:
@@ -25,6 +25,5 @@ jobs:
       - name: Run bot
         env:
           TOKEN: ${{ secrets.TOKEN }}
-          OWNERID: ${{ secrets.OWNERID }}
         run: |
           node CTF-Tracker.js
