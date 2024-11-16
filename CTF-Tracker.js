@@ -277,8 +277,8 @@ const compareCommand = async interaction => {
                     const eventTitle = event.title || 'NIL';
                     const eventPoints = event.points || 'NIL';
                     const eventRank = event.place || 'N/A';
-                    return `**${eventTitle}** (_Rank: ${eventRank} & Points: ${eventPoints}_)`;
-                })
+                    return `${eventTitle} (_Rank: ${eventRank} & Points: ${eventPoints}_)`;
+                }), inline: true,
             });
         }
     }
