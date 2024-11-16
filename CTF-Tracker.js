@@ -256,27 +256,43 @@ const compareCommand = async interaction => {
     const teamData = [];
     for (const teamQuery of teamIds) {
         const team = await getTeam(teamQuery);
-        if (!team) { return interaction.editReply({ content: `ISSUE: TEAM ${teamQuery} NOT FOUND`, ephemeral: true }); }
+        if (!team || !team.id) { return interaction.editReply({ content: `ISSUE: TEAM ${teamQuery} NOT FOUND`, ephemeral: true }); }
         const results = await getEventsByTeam(team.id);
-        if (!results || results.length === 0) { teamData.push({ name: team.name, totalPoints: 0, results: ['! NO EVENTS PLAYED !'] }); }
-        else {
+        if (!results || results.length === 0) {
+            teamData.push({
+                name: team.name,
+                totalPoints: 0,
+                results: ['! NO EVENTS PLAYED !']
+            });
+        } else {
             const latestResults = results.slice(0, 5);
             const totalPoints = latestResults.reduce((sum, event) => {
                 const points = parseInt(event.points.replace(' POINTS', ''), 10);
                 return sum + (isNaN(points) ? 0 : points);
             }, 0);
-            teamData.push({ name: team.name, totalPoints, results: latestResults });
+            teamData.push({
+                name: team.name,
+                totalPoints,
+                results: latestResults.map((event, index) => {
+                    const eventTitle = event.title || 'NIL';
+                    const eventPoints = event.points || 'NIL';
+                    const eventRank = event.place || 'N/A';
+                    return `**${eventTitle}** (_Rank: ${eventRank} & Points: ${eventPoints}_)`;
+                })
+            });
         }
     }
     teamData.sort((a, b) => b.totalPoints - a.totalPoints);
     const embed = new djs.EmbedBuilder()
         .setColor(global.config.color)
-        .setTitle('##@- CTF TEAMS COMPARISON BASED ON LAST 5 CTFs -@##');
+        .setTitle('##@- CTF TEAMS COMPARISON BASED ON LAST 5 CTFs -@##')
+        .setDescription('Here are the comparisons based on the latest 5 CTF events played by the teams:')
+        .setTimestamp();
     teamData.forEach((team, index) => {
         embed.addFields({
-            name: `${index + 1}. ${team.name} (TP: ${team.totalPoints})\n`, inline: true,
-            value: `\n### RECENT EVENT RESULTS ###\n` + (Array.isArray(team.results) ? team.results.join('\n')
-                : team.results.map(e => `${index + 1}) ${e.title}: ${e.points}`).join('\n')) || 'NO EVENTS PLAYED',
+            name: `${index + 1}. ${team.name} (Total Points: ${team.totalPoints})`,
+            value: team.results.join('\n') || 'No event results available',
+            inline: false
         });
     });
     await interaction.editReply({ embeds: [embed] });
