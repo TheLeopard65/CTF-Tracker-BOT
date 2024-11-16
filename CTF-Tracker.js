@@ -258,23 +258,25 @@ const compareCommand = async interaction => {
         const team = await getTeam(teamQuery);
         if (!team) { return interaction.editReply({ content: `ISSUE: TEAM ${teamQuery} NOT FOUND`, ephemeral: true }); }
         const results = await getEventsByTeam(team.id);
-        if (!results || results.length === 0) { return interaction.editReply({ content: `ISSUE: No CTF Events Found for Team ${team.name}.`, ephemeral: true }); }
-        const latestResults = results.slice(0, 5);
-        const totalPoints = latestResults.reduce((sum, event) => {
-            const points = parseInt(event.points.replace(' POINTS', ''), 10);
-            return sum + (isNaN(points) ? 0 : points);
-        }, 0);
-        teamData.push({ name: team.name, totalPoints, results: latestResults });
+        if (!results || results.length === 0) { teamData.push({ name: team.name, totalPoints: 0, results: ['! NO EVENTS PLAYED !'] }); }
+        else {
+            const latestResults = results.slice(0, 5);
+            const totalPoints = latestResults.reduce((sum, event) => {
+                const points = parseInt(event.points.replace(' POINTS', ''), 10);
+                return sum + (isNaN(points) ? 0 : points);
+            }, 0);
+            teamData.push({ name: team.name, totalPoints, results: latestResults });
+        }
     }
     teamData.sort((a, b) => b.totalPoints - a.totalPoints);
     const embed = new djs.EmbedBuilder()
         .setColor(global.config.color)
         .setTitle('##@- CTF TEAMS COMPARISON BASED ON LAST 5 CTFs -@##');
-
     teamData.forEach((team, index) => {
         embed.addFields({
             name: `${index + 1}. ${team.name} (TP: ${team.totalPoints})\n`, inline: true,
-            value: `\n### RECENT EVENT RESULTS ###\n` + team.results.map(e => `${index + 1}) ${e.title}: ${e.points}`).join('\n') || 'NO EVENTS PLAYED',
+            value: `\n### RECENT EVENT RESULTS ###\n` + (Array.isArray(team.results) ? team.results.join('\n')
+                : team.results.map(e => `${index + 1}) ${e.title}: ${e.points}`).join('\n')) || 'NO EVENTS PLAYED',
         });
     });
     await interaction.editReply({ embeds: [embed] });
