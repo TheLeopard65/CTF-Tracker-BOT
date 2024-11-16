@@ -151,7 +151,7 @@ const helpCommand = async interaction => {
             `**/teaminfo** - Views a team's information by name or ID.\n` +
             `**/compare** - Compare pre-set teams based on their latest 5 CTF Event scores`
         )
-        .setFooter({ text: 'NEED HELP? VISIT OUR [GITHUB](https://github.com/TheLeopard65/CTF-Tracker-BOT)' })
+        .setFooter({ text: 'VISIT OUR [GITHUB](https://github.com/TheLeopard65/CTF-Tracker-BOT) FOR DETAILS' })
     await interaction.reply({ embeds: [embed] });
 };
 
@@ -201,11 +201,9 @@ const teaminfoCommand = async interaction => {
     if (!query) { return await interaction.editReply({ content: 'SYNTAX: Provide a team name or ID to search for.', ephemeral: true }); }
     try {
         const team = await getTeam(query);
-        if (!team || !team.id) { return await interaction.editReply({ content: `ISSUE: TEAM "${query}" NOT FOUND. (PLEASE CHECK YOUR INPUT)`, ephemeral: true }); }
+        if (!team || !team.id) { return await interaction.editReply({ content: `ISSUE: Team "${query}" Not Found. (PLEASE CHECK YOUR INPUT)`, ephemeral: true }); }
         const members = team.aliases && team.aliases.length > 0 ? team.aliases.join(', ') : 'N/A';
         const events = await getEventsByTeam(team.id);
-        if (!events || events.length === 0) { return await interaction.editReply({ content: `ISSUE: No CTF Events Found for Team "${team.name}".`, ephemeral: true }); }
-
         const embed = new djs.EmbedBuilder()
             .setColor(global.config.color)
             .setTitle(`#####@ - ${team.name} TEAM INFORMATION - @#####`)
@@ -220,23 +218,27 @@ const teaminfoCommand = async interaction => {
             .setFooter({ text: 'NOTE: DATA PROVIDED BY CTFTIME.ORG' })
             .setTimestamp();
 
-        const eventFields = events.slice(0, 5).map((event, index) => {
-            const eventTitle = event.title || 'No Title';
-            const eventPoints = event.points || 'No Points';
-            const eventRank = event.place || 'N/A';
-            return `${index + 1}. **${eventTitle}** (_Rank: ${eventRank} & Points: ${eventPoints}_)`;
-        }).join('\n');
-
-        embed.addFields({
-            name: `\n#####@ - ${team.name} RECENT EVENTS - @#####`,
-            value: eventFields || '! No events to display !',
-            inline: false
-        });
-
+        if (events && events.length > 0) {
+            const eventFields = events.slice(0, 5).map((event, index) => {
+                const eventTitle = event.title || 'NIL';
+                const eventPoints = event.points || 'NIL';
+                const eventRank = event.place || 'N/A';
+                return `${index + 1}. **${eventTitle}** (_Rank: ${eventRank} & Points: ${eventPoints}_)`;
+            }).join('\n');
+            embed.addFields({
+                name: `\n#####@ - ${team.name} RECENT EVENTS - @#####`,
+                value: eventFields || '! NO EVENTS PLAYED !',
+                inline: false
+            });
+        } else {
+            embed.addFields({
+                name: `\n#####@ - ${team.name} RECENT EVENTS - @#####`,
+                value: '! NO EVENTS PLAYED !',
+                inline: false
+            });
+        }
         return await interaction.editReply({ embeds: [embed] });
-    } catch (error) {
-        return await interaction.editReply({ content: 'ERROR: Could not fetch Team Information. (PLEASE TRY AGAIN LATER)', ephemeral: true });
-    }
+    } catch (error) { return await interaction.editReply({ content: 'ERROR: Could not fetch Team Information. (PLEASE TRY AGAIN LATER)', ephemeral: true }); }
 };
 
 let teamIds = [];
@@ -272,7 +274,7 @@ const compareCommand = async interaction => {
     teamData.forEach((team, index) => {
         embed.addFields({
             name: `${index + 1}. ${team.name} (TP: ${team.totalPoints})\n`, inline: true,
-            value: `\n### RECENT EVENT RESULTS ###\n` + team.results.map(e => `${index + 1}) ${e.title}: ${e.points}`).join('\n') || 'No Results Available',
+            value: `\n### RECENT EVENT RESULTS ###\n` + team.results.map(e => `${index + 1}) ${e.title}: ${e.points}`).join('\n') || 'NO EVENTS PLAYED',
         });
     });
     await interaction.editReply({ embeds: [embed] });
