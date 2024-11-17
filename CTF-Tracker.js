@@ -18,7 +18,7 @@ const fetchAndCache = async (key, url, retries = 3) => {
     const cachedData = cache.get(key);
     if (cachedData) { return cachedData; }
     try {
-        const response = await fetch(url, { timeout: 15000 });
+        const response = await fetch(url, { timeout: 8000 });
         if (response.status !== 200) return null;
         const data = await response.json();
         cache.set(key, data);
@@ -61,7 +61,7 @@ const getEventsByTeam = async team => {
     teamEvents.sort((a, b) => {
         const aTime = new Date(times.find(time => time.id == a.eventId).start);
         const bTime = new Date(times.find(time => time.id == b.eventId).start);
-        return aTime - bTime;
+        return bTime - aTime;
     });
     return teamEvents;
 };
@@ -78,7 +78,7 @@ const getUpcomingEvents = async () => {
     endDate.setHours(3, 0, 0, 0);
     const upcomingEvents = events.filter(event => {
         const startTime = new Date(event.start);
-        return ( startTime >= startDate && startTime <= endDate && (event.onsite || event.location.includes('Online') || event.location == '') );
+        return ( startTime >= startDate && startTime <= endDate && (event.onsite == false || event.location.includes('Online') || event.location == '') );
     });
     return upcomingEvents || null;
 };
@@ -144,14 +144,14 @@ const registerCommands = async () => {
 const helpCommand = async interaction => {
     const embed = new djs.EmbedBuilder()
         .setColor(global.config.color)
-        .setTitle('#####@ - COMMANDS LIST - @#####')
+        .setTitle('-------------------------- COMMANDS LIST ---------------------------\n-------------------------------------------------------------------------\n')
         .setDescription(
             `**/help** - Display this Help Message to find out what the BOT Does!\n` +
             `**/newctfs** - Lists the top upcoming CTF Events on the CTFTime.\n` +
             `**/teaminfo** - Views a team's information by name or ID.\n` +
             `**/compare** - Compare pre-set teams based on their latest 5 CTF Event scores`
         )
-        .setFooter({ text: 'VISIT OUR [GITHUB](https://github.com/TheLeopard65/CTF-Tracker-BOT) FOR DETAILS' })
+        .setFooter({ text: '\n--------------------------------------------------------------------------------------------------\nVISIT OUR [GITHUB](https://github.com/TheLeopard65/CTF-Tracker-BOT) FOR DETAILS' })
     await interaction.reply({ embeds: [embed] });
 };
 
@@ -170,27 +170,36 @@ const newctfsCommand = async interaction => {
                 else if (sort === 'participants') return b.participants - a.participants;
                 else if (sort === 'duration') return (new Date(a.finish) - new Date(a.start)) - (new Date(b.finish) - new Date(b.start));
                 return b.weight - a.weight;
-            })
-            .slice(0, limit);
+            }).slice(0, limit);
 
         const embed = new djs.EmbedBuilder()
             .setColor(global.config.color)
-            .setTitle(' #####@ - TOP UPCOMING CTF EVENTS ON CTFTIME.ORG - @##### ')
+            .setTitle('----------- TOP UPCOMING CTF EVENTS ON CTFTIME.ORG ----------\n-------------------------------------------------------------------------\n')
             .setURL('https://ctftime.org/event/list/upcoming')
-            .setDescription('Here are the Top Upcoming Online CTFs on CTFTime for you to play:');
+            .setDescription('Here are the Top Upcoming Online CTFs on CTFTime for you to play:')
+            .setFooter({ text: 'NOTE: DATA PROVIDED BY CTFTIME.ORG' })
+            .setTimestamp();
 
-        let characters = 0;
-        for (let i = 0; i < events.length && characters + 1000 < 30000; i++) {
-            const event = events[i];
-            const startTime = new Date(event.start);
-            const endTime = new Date(event.finish);
+		let characters = 0;
+		for (let i = 0; i < events.length && characters + 1000 < 30000; i++) {
+		    const event = events[i];
+		    const startTime = new Date(event.start);
+		    const endTime = new Date(event.finish);
+		    const eventDetails = await fetchAndCache(`event_${event.id}`, `https://ctftime.org/api/v1/events/${event.id}/`);
+		    if (!eventDetails) { continue; }
+		    const organizer = eventDetails.organizer || 'N/A';
+		    const ctfFormat = eventDetails.format || 'N/A';
+		    const location = eventDetails.location || 'Online';
+		    const weight = eventDetails.weight || 'N/A';
+		    embed.addFields({
+		        name: `${i + 1}. ${event.title}[Link](https://ctftime.org/event/${event.id})`,
+		        value: `**TIMING**: FROM <t:${Math.floor(startTime.getTime() / 1000)}:f> TO <t:${Math.floor(endTime.getTime() / 1000)}:f>\n` +
+		            `**CTF FORMAT**: ${ctfFormat}\n` + `**LOCATION**: ${location}\n` + `**EVENT WEIGHT**: ${weight}\n` +
+		            `-------------------------------------------------------------------------------------\n`
+		    });
+		    characters += 1000;
+		}
 
-            embed.addFields({
-                name: `${i + 1}. [${event.title}](https://ctftime.org/event/${event.id})`,
-                value: `**TIMING**: FROM <t:${Math.floor(startTime.getTime() / 1000)}:f> TO <t:${Math.floor(endTime.getTime() / 1000)}:f>\n`,
-            });
-            characters += 1000;
-        }
         await interaction.editReply({ embeds: [embed] });
     } catch (error) { await interaction.editReply({ content: 'ERROR: Timed-Out while fetching upcoming CTF Events. (PLEASE TRY AGAIN LATER)' }); }
 };
@@ -202,20 +211,17 @@ const teaminfoCommand = async interaction => {
     try {
         const team = await getTeam(query);
         if (!team || !team.id) { return await interaction.editReply({ content: `ISSUE: Team "${query}" Not Found. (PLEASE CHECK YOUR INPUT)`, ephemeral: true }); }
-        const members = team.aliases && Array.isArray(team.aliases) && team.aliases.length > 0 ? team.aliases.join(', ') : 'N/A';
         const events = await getEventsByTeam(team.id);
         const embed = new djs.EmbedBuilder()
             .setColor(global.config.color)
-            .setTitle(`#####@ - ${team.name} TEAM INFORMATION - @#####`)
+            .setTitle('------------------------ TEAM INFORMATION -------------------------\n-------------------------------------------------------------------------\n')
             .setURL(`https://ctftime.org/team/${team.id}/`)
-            .addFields(
-                { name: 'NAME:', value: `${team.name || 'N/A'}`, inline: true },
-                { name: 'Country:', value: `${team.country || 'N/A'}`, inline: true },
-                { name: 'TEAM-ID:', value: `${team.id}`, inline: true },
-                { name: 'NATIONAL-RANK:', value: `${team.rating && team.rating["2024"] && team.rating["2024"].country_place ? team.rating["2024"].country_place.toString() : "N/A"}`, inline: true },
-                { name: 'TEAM MEMBERS:', value: `${members}`, inline: true }
-            )
-            .setFooter({ text: 'NOTE: DATA PROVIDED BY CTFTIME.ORG' })
+            .addFields({
+                name: `**NAME**: ${team.name || 'N/A'}         |         **ORIGIN**: ${team.country || 'N/A'}         |         **RANK**: ${team.rating && team.rating["2024"] && team.rating["2024"].country_place ? team.rating["2024"].country_place.toString() : "N/A"}         |         **ID**: ${team.id}`,
+                value: ' ',
+                inline: true
+            })
+            .setFooter({ text: '\n--------------------------------------------------------------------------------------------------\nNOTE: DATA PROVIDED BY CTFTIME.ORG' })
             .setTimestamp();
 
         if (events && events.length > 0) {
@@ -226,23 +232,20 @@ const teaminfoCommand = async interaction => {
                 return `${index + 1}. **${eventTitle}** (_Rank: ${eventRank} & Points: ${eventPoints}_)`;
             }).join('\n');
             embed.addFields({
-                name: `\n#####@ - ${team.name} RECENT EVENTS - @#####`,
-                value: eventFields || '! NO EVENTS PLAYED !',
+                name: '\n-----------------------------------------------------------------------------------\n',
+                value: eventFields || '------------------------------- NO EVENTS PLAYED -------------------------------',
                 inline: false
             });
         } else {
             embed.addFields({
-                name: `\n#####@ - ${team.name} RECENT EVENTS - @#####`,
-                value: '! NO EVENTS PLAYED !',
+                name: '\n-----------------------------------------------------------------------------------\n',
+                value: '------------------------------- NO EVENTS PLAYED -------------------------------',
                 inline: false
             });
         }
-        console.log("Team aliases:", team.aliases);
-        console.log("Team members:", team.members);
         return await interaction.editReply({ embeds: [embed] });
     } catch (error) { return await interaction.editReply({ content: 'ERROR: Could not fetch Team Information. (PLEASE TRY AGAIN LATER)', ephemeral: true }); }
 };
-
 
 let teamIds = [];
 const setteamsCommand = async interaction => {
@@ -268,7 +271,7 @@ const compareCommand = async interaction => {
                 results: ['! NO EVENTS PLAYED !']
             });
         } else {
-            const latestResults = results.slice(0, 5);
+        	const latestResults = results.sort((a, b) => new Date(b.start) - new Date(a.start)).slice(0, 5);
             const totalPoints = latestResults.reduce((sum, event) => {
                 const points = parseInt(event.points.replace(' POINTS', ''), 10);
                 return sum + (isNaN(points) ? 0 : points);
@@ -288,13 +291,13 @@ const compareCommand = async interaction => {
     teamData.sort((a, b) => b.totalPoints - a.totalPoints);
     const embed = new djs.EmbedBuilder()
         .setColor(global.config.color)
-        .setTitle('##@- CTF TEAMS COMPARISON BASED ON LAST 5 CTFs -@##')
-        .setDescription('Here are the comparisons based on the latest 5 CTF events played by the teams:')
+        .setTitle('-- CTF TEAMS COMPARISON BASED ON THE LAST 5 CTF EVENTS --')
+        .setFooter({ text: '\n--------------------------------------------------------------------------------------------------\nNOTE: DATA PROVIDED BY CTFTIME.ORG' })
         .setTimestamp();
     teamData.forEach((team, index) => {
         embed.addFields({
-            name: `${index + 1}. ${team.name} (Total Points: ${team.totalPoints})`,
-            value: team.results.join('\n') || 'No event results available',
+            name: `\n-----------------------------------------------------------------------------------\n${index + 1}. ${team.name} (Total Points: ${team.totalPoints})`,
+            value: team.results.join('\n') || '! NO EVENTS PLAYED !',
             inline: false
         });
     });
