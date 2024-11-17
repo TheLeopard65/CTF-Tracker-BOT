@@ -202,7 +202,7 @@ const teaminfoCommand = async interaction => {
     try {
         const team = await getTeam(query);
         if (!team || !team.id) { return await interaction.editReply({ content: `ISSUE: Team "${query}" Not Found. (PLEASE CHECK YOUR INPUT)`, ephemeral: true }); }
-        const members = team.aliases && team.aliases.length > 0 ? team.aliases.join(', ') : 'N/A';
+        const members = team.aliases && Array.isArray(team.aliases) && team.aliases.length > 0 ? team.aliases.join(', ') : 'N/A';
         const events = await getEventsByTeam(team.id);
         const embed = new djs.EmbedBuilder()
             .setColor(global.config.color)
@@ -240,6 +240,7 @@ const teaminfoCommand = async interaction => {
         return await interaction.editReply({ embeds: [embed] });
     } catch (error) { return await interaction.editReply({ content: 'ERROR: Could not fetch Team Information. (PLEASE TRY AGAIN LATER)', ephemeral: true }); }
 };
+
 
 let teamIds = [];
 const setteamsCommand = async interaction => {
