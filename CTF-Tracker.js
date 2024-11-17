@@ -237,6 +237,8 @@ const teaminfoCommand = async interaction => {
                 inline: false
             });
         }
+        console.log("Team aliases:", team.aliases);
+        console.log("Team members:", team.members);
         return await interaction.editReply({ embeds: [embed] });
     } catch (error) { return await interaction.editReply({ content: 'ERROR: Could not fetch Team Information. (PLEASE TRY AGAIN LATER)', ephemeral: true }); }
 };
