@@ -1,32 +1,30 @@
-# CTF-Tracker.js
+# CTF-Tracker-BOT
 
-**CTF-Tracker.js** is a powerful Discord bot designed to provide real-time updates and insights into Capture The Flag (CTF) competitions. It integrates with [CTFTime](https://ctftime.org) to fetch and display information about upcoming CTF events, team rankings, and event results. The bot also allows admins to compare multiple teams based on their latest CTF performances.
+CTF-Tracker-BOT is a powerful Discord bot designed to provide real-time updates and insights into Capture The Flag (CTF) events. The bot fetches data from [CTFtime.org](https://ctftime.org) and allows users to track upcoming CTF events, view detailed team information, and compare multiple teams based on their performance in past CTF competitions. It can also help administrators set up teams for easy comparison.
 
-### Features:
-- **Upcoming CTF Events**: Displays a list of top upcoming CTF events on CTFTime, sortable by various criteria (e.g., start time, participants, duration).
-- **Team Information**: Fetches detailed information about CTF teams, including country, national rank, and recent event performance.
-- **Team Comparison**: Allows administrators to set up a comparison of multiple teams based on their latest 5 CTF event scores.
-- **Command Support**: Provides several slash commands that make interaction simple and efficient.
+### Features
+- **Upcoming CTF Events**: Displays the top upcoming CTF events, sortable by different criteria such as weight, start time, and participants.
+- **Team Information**: Retrieves detailed information about any CTF team (name, rank, country, recent event performance).
+- **Team Comparison**: Allows comparing teams' scores across their most recent 5 CTF events.
+- **Administrator Tools**: Set teams for comparison with specific commands accessible to admins.
 
-### Slash Commands:
-- `/help` - Displays the bot's help message.
-- `/newctfs` - Lists the top upcoming CTF events on CTFTime. You can filter by count and sort them by different attributes (weight, start time, end time, etc.).
-- `/teaminfo <teamid>` - Fetches detailed information about a team based on its name or ID.
-- `/setteams <teams>` - Admin-only command to set a list of teams for comparison. (Comma-separated team IDs or names)
-- `/compare` - Compares the pre-set teams based on their performance in the latest 5 CTF events.
+### Commands
+- `/help`: Displays a list of available bot commands and their descriptions.
+- `/newctfs`: Lists the top upcoming CTF events from CTFtime.org.
+- `/teaminfo`: Fetches detailed information about a specific team by name or ID.
+- `/setteams`: Admin command to set teams for comparison. (ADMINISTRATOR-ONLY)
+- `/compare`: Compares multiple teams' performances across their latest CTF events.
 
-### Requirements:
-- **Node.js**: Version 16 or higher.
-- **Dependencies**:
-  - [discord.js](https://discord.js.org) - For interacting with the Discord API.
-  - [dotenv](https://www.npmjs.com/package/dotenv) - For loading environment variables.
-  - [node-fetch](https://www.npmjs.com/package/node-fetch) - For fetching data from external APIs.
-  - [node-cache](https://www.npmjs.com/package/node-cache) - For caching API responses.
+### Requirements
+- Node.js (v16 or higher)
+- `discord.js` v14.16.3 or higher
+- `node-fetch`
+- `dotenv`
+- A valid CTFtime.org API key (set in `.env`)
 
-### Setup Instructions:
-- You can install the bot directly into your Discord Server by using the following command: [Install on Discord](https://discord.com/oauth2/authorize?client_id=1305959271908900884&scope=bot&permissions=1926292950016)
+### Installation
 
-1. Clone this repository to your local machine:
+1. Clone the repository:
    ```bash
    git clone https://github.com/TheLeopard65/CTF-Tracker-BOT.git
    cd CTF-Tracker-BOT
@@ -37,9 +35,9 @@
    npm install
    ```
 
-3. Create a `.env` file in the root of your project and set your Discord bot token:
-   ```
-   TOKEN=YOUR_DISCORD_BOT_TOKEN
+3. Create a `.env` file in the root of the project with your Discord bot token:
+   ```env
+   TOKEN=your_discord_bot_token
    ```
 
 4. Run the bot:
@@ -47,36 +45,22 @@
    npm start
    ```
 
-5. Add your bot to your Discord server and enjoy tracking CTF events and teams!
+5. Enjoy a Flag While it boots up:
+   ```plaintext
+   F23A{I_l0v3_b0t5_1n_g4m3s}
+   ```
+---
 
-### How It Works:
-- **Fetching CTF Data**: The bot fetches data from CTFTime's public API to get details about upcoming CTF events, team scores, and rankings.
-- **Caching**: To minimize redundant API calls and improve performance, the bot uses an in-memory cache (with a TTL of 24 hours) for storing event and team data.
-- **Team Comparison**: Admins can compare the performance of multiple teams based on their most recent CTF results. The bot calculates the total points from their last 5 events.
+### Configuration
+- The bot uses the `dotenv` package to load configuration from a `.env` file. Make sure to set your bot token there.
+- Additional configuration options like color and timezone are set in the `CTF-Tracker.js` file. You can modify these settings as needed.
 
-### Example Usage:
-- **Display upcoming CTF events**:
-  `/newctfs count: 5 sort: start`
-  
-- **Get information about a team**:
-  `/teaminfo teamid: "TheLeopard65"`
+### License
+MIT License - See [LICENSE](LICENSE) for more details.
 
-- **Compare multiple teams**:
-  Admins can use the `/setteams` command to set a list of teams, followed by the `/compare` command to compare their performances.
+### Bugs and Issues
+If you encounter any issues, please open an issue on the [GitHub repository](https://github.com/TheLeopard65/CTF-Tracker-BOT/issues).
 
-### Contributing:
-Feel free to fork the repository and submit issues or pull requests. If you encounter any bugs or have suggestions for new features, don't hesitate to open an issue on the [GitHub repository](https://github.com/TheLeopard65/CTF-Tracker-BOT/issues).
+---
 
-### License:
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-### Author:
-[Leopard (@theleopard65)](https://github.com/TheLeopard65)
-
-### Acknowledgments:
-- [CTFTime](https://ctftime.org) for providing the API and data.
-- [discord.js](https://discord.js.org) for their excellent library for building Discord bots.
-
-### Links:
-- [GitHub Repository](https://github.com/TheLeopard65/CTF-Tracker-BOT)
-- [CTFTime](https://ctftime.org)
+For more information, visit the [GitHub page](https://github.com/TheLeopard65/CTF-Tracker-BOT).
