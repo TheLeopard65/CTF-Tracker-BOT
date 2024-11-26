@@ -44,11 +44,6 @@ CTF-Tracker-BOT is a powerful Discord bot designed to provide real-time updates 
    ```bash
    npm start
    ```
-
-5. Enjoy a Flag While it boots up:
-   ```plaintext
-   F23A{I_l0v3_b0t5_1n_g4m3s}
-   ```
 ---
 
 ### Configuration
